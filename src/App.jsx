@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // 👾 랜덤 정답 생성 함수 (중복 없는 숫자 생성)
 const generateRandomNumbers = (length) => {
@@ -12,14 +12,14 @@ const generateRandomNumbers = (length) => {
   return picked;
 };
 
-// 👾 레벨별 설정 데이터
+// 👾 레벨별 설정 데이터 (요청하신 '분' 단위를 초(seconds) 값으로 환산하여 세팅)
 const LEVEL_CONFIG = {
-  1: { digits: 3, name: "졸린 보라 몬스터", emoji: "🔮", color: "#7e57c2", baseLine: "쿨쿨...💤 깨우면 화낼꼬야... 야구공 던지지 마!", touchLine: "💤 아우 졸려어어... 건들지 마라 더 잘거야아앙... 😴", description: "항상 졸려 눈을 제대로 뜨지 못하는 보라색 생명체. 잠을 방해하는 야구공을 세상에서 가장 싫어합니다." },
-  2: { digits: 3, name: "초록 눈망울 몬스터", emoji: "🌱", color: "#9ccc65", baseLine: "헉!😮 방금 던진 공 뭐야?! 깜짝 놀랐잖아!", touchLine: "⚡ 앗 깜짝이야!! 갑자기 만지면 어떡해!! 튀용~ 😲", description: "소심하고 겁이 많아 작은 소리에도 통통 튀어 오르는 초록 몬스터. 놀라게 하면 삐질지도 몰라요." },
-  3: { digits: 4, name: "노란 귀 몬스터", emoji: "🍊", color: "#ffca28", baseLine: "4자리 숫자인가? 냠냠~ 내 귀 맛있겠다! 🍊", touchLine: "🍊 냠냠! 내 귀는 귤이 아니라구! 먹는 거 아니야!! 😡", description: "머리에 달린 상큼한 귤 모양 귀가 매력 포인트. 자꾸 먹을 것으로 오해받아 스트레스를 받고 있습니다." },
-  4: { digits: 4, name: "빨간 에너지 몬스터", emoji: "🔥", color: "#ef5350", baseLine: "크오오오!!🔥 에너지가 끓어오른다! 다 맞춰봐!", touchLine: "🔥 앗 뜨거! 지금 내 몸은 불타오르고 있으니 조심해라 크르릉!!", description: "전신이 불타는 마그마로 이루어진 열정적인 파이터. 정답을 맞추기 전까진 절대 화를 가라앉히지 않습니다." },
-  5: { digits: 5, name: "파란 날개 몬스터", emoji: "❄️", color: "#29b6f6", baseLine: "5자리나 되는데 과연? 😠 내 날개로 다 쳐내주지!", touchLine: "💨 내 날개 깃털 만지지 마! 간지럽단 말이야 흐흥!! 😤", description: "단단하고 거대한 얼음 날개를 지닌 수호신. 5자리의 복잡한 숫자로 투수들의 혼을 쏙 빼놓습니다." },
-  6: { digits: 5, name: "핑크 전설 몬스터 ✨", emoji: "👑", color: "#ec407a", baseLine: "✨ 전설의 별 왕관 등장! 최종 마스터에 도전해라! ✨", touchLine: "✨ 감히 전설의 왕관을 터치하다니! 무례하도다 소년이여!! ✨", description: "이 스타디움의 지배자이자 전설적인 존재. 화려한 별 왕관을 쓰고 있으며, 완벽한 투구만이 그를 굴복시킬 수 있습니다." }
+  1: { digits: 3, timeLimit: null, name: "졸린 보라 몬스터", emoji: "🔮", color: "#7e57c2", baseLine: "쿨쿨...💤 깨우면 화낼꼬야... 야구공 던지지 마!", touchLine: "💤 아우 졸려어어... 건들지 마라 더 잘거야아앙... 😴", description: "항상 졸려 눈을 제대로 뜨지 못하는 보라색 생명체. 잠을 방해하는 야구공을 세상에서 가장 싫어합니다." },
+  2: { digits: 3, timeLimit: 40 * 60, name: "초록 눈망울 몬스터", emoji: "🌱", color: "#9ccc65", baseLine: "헉!😮 방금 던진 공 뭐야?! 깜짝 놀랐잖아!", touchLine: "⚡ 앗 깜짝이야!! 갑자기 만지면 어떡해!! 튀용~ 😲", description: "소심하고 겁이 많아 작은 소리에도 통통 튀어 오르는 초록 몬스터. 놀라게 하면 삐질지도 몰라요." },
+  3: { digits: 4, timeLimit: 30 * 60, name: "노란 귀 몬스터", emoji: "🍊", color: "#ffca28", baseLine: "4자리 숫자인가? 냠냠~ 내 귀 맛있겠다! 🍊", touchLine: "🍊 냠냠! 내 귀는 귤이 아니라구! 먹는 거 아니야!! 😡", description: "머리에 달린 상큼한 귤 모양 귀가 매력 포인트. 자꾸 먹을 것으로 오해받아 스트레스를 받고 있습니다." },
+  4: { digits: 4, timeLimit: 25 * 60, name: "빨간 에너지 몬스터", emoji: "🔥", color: "#ef5350", baseLine: "크오오오!!🔥 에너지가 끓어오른다! 다 맞춰봐!", touchLine: "🔥 앗 뜨거! 지금 내 몸은 불타오르고 있으니 조심해라 크르릉!!", description: "전신이 불타는 마그마로 이루어진 열정적인 파이터. 정답을 맞추기 전까진 절대 화를 가라앉히지 않습니다." },
+  5: { digits: 5, timeLimit: 20 * 60, name: "파란 날개 몬스터", emoji: "❄️", color: "#29b6f6", baseLine: "5자리나 되는데 과연? 😠 내 날개로 다 쳐내주지!", touchLine: "💨 내 날개 깃털 만지지 마! 간지럽단 말이야 흐흥!! 😤", description: "단단하고 거대한 얼음 날개를 지닌 수호신. 5자리의 복잡한 숫자로 투수들의 혼을 쏙 빼놓습니다." },
+  6: { digits: 5, timeLimit: 15 * 60, name: "핑크 전설 몬스터 ✨", emoji: "👑", color: "#ec407a", baseLine: "✨ 전설의 별 왕관 등장! 최종 마스터에 도전해라! ✨", touchLine: "✨ 감히 전설의 왕관을 터치하다니! 무례하도다 소년이여!! ✨", description: "이 스타디움의 지배자이자 전설적인 존재. 화려한 별 왕관을 쓰고 있으며, 완벽한 투구만이 그를 굴복시킬 수 있습니다." }
 };
 
 const INITIAL_RANKING = [
@@ -52,13 +52,33 @@ function App() {
   const [isTouched, setIsTouched] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
 
+  // ⏱️ 타이머 및 패배(게임오버) 상태
+  const [timeLeft, setTimeLeft] = useState(null); // 1단계는 기본 무제한(null)
+  const [isGameOver, setIsGameOver] = useState(false);
+
   const maxXp = 30; 
   const currentConfig = LEVEL_CONFIG[lvl] || LEVEL_CONFIG[1];
 
-  // 🛠️ [수정] 가장 안전한 상대 경로(./) 방식으로 변경합니다. 
-  // Vite 빌드 엔진이 vite.config.js의 base 경로인 /monster-baseball/과 자동으로 안전하게 병합해 줍니다.
+  // 🛠️ 고정된 부분: 무한루프를 발생시키던 무분별한 useEffect 제거 후, 
+  // 1초씩 빼주는 순수 타이머 인터벌만 이펙트로 유지합니다.
+  useEffect(() => {
+    if (timeLeft === null || isGameOver || activeTab !== 'home') return;
+
+    if (timeLeft <= 0) {
+      setIsGameOver(true);
+      setMonsterEffect('monster-lose-giant'); 
+      return;
+    }
+
+    const timerInterval = setInterval(() => {
+      setTimeLeft(prev => prev !== null ? prev - 1 : null);
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [timeLeft, isGameOver, activeTab]);
+
   const getMonsterImageUrl = (level) => {
-    return `./images/monster${level}.png`;
+    return `${import.meta.env.BASE_URL}images/monster${level}.png`;
   };
 
   const handleLogin = (e) => {
@@ -78,7 +98,7 @@ function App() {
   };
 
   const handleMonsterTouch = () => {
-    if (isPitching || isTouched) return; 
+    if (isPitching || isTouched || isGameOver) return; 
     setIsTouched(true);
     setMonsterEffect('monster-poke'); 
     setTouchLine(currentConfig.touchLine);
@@ -94,10 +114,28 @@ function App() {
     setInput('');
     setLogs([]);
     setXp(0);
+    // 현재 단계 다시하기를 눌렀을 때도 타이머를 동기화해줍니다.
+    setTimeLeft(currentConfig.timeLimit);
+    setIsGameOver(false);
+  };
+
+  const restartFromScratch = () => {
+    setLvl(1);
+    setDigitLength(LEVEL_CONFIG[1].digits);
+    setAnswer(generateRandomNumbers(LEVEL_CONFIG[1].digits));
+    setInput('');
+    setLogs([]);
+    setXp(0);
+    setIsGameOver(false);
+    setImgFailed(false);
+    setMonsterEffect('monster-appear');
+    setTimeLeft(LEVEL_CONFIG[1].timeLimit); // 1단계의 시간 한도로 명확히 세팅
   };
 
   const handleGuess = (e) => {
     e.preventDefault();
+    if (isGameOver) return;
+
     if (input.length !== digitLength || isNaN(input)) {
       alert(`${digitLength}자리 숫자를 정확히 입력해주세요!`);
       return;
@@ -134,6 +172,8 @@ function App() {
           const nextLvl = lvl + 1;
           if (lvl < 6) {
             const nextConfig = LEVEL_CONFIG[nextLvl];
+            
+            // 💡 [해결 핵심] 이펙트 대신, 정답을 맞춰 다음 레벨로 넘어가는 이벤트 내부에서 직접 상태들을 업데이트합니다!
             setLvl(nextLvl);
             setDigitLength(nextConfig.digits);
             setAnswer(generateRandomNumbers(nextConfig.digits));
@@ -142,6 +182,10 @@ function App() {
             setXp(0);
             setImgFailed(false);
             setMonsterEffect('monster-appear');
+            
+            // 다음 레벨에 배정된 분 단위를 타임리프에 동기식으로 밀어 넣어줍니다.
+            setTimeLeft(nextConfig.timeLimit);
+            setIsGameOver(false);
 
             if (isLoggedIn) {
               setRankingList(prev => prev.map(u => u.nickname === nickname ? { ...u, maxLvl: nextLvl } : u).sort((a, b) => b.maxLvl - a.maxLvl));
@@ -150,7 +194,7 @@ function App() {
             alert(`🎉 정답!! 홈런!! [${currentConfig.name}]을(를) 격파하고 레벨업합니다!`);
           } else {
             alert(`🏆 대단합니다! 최종 보스 핑크 전설 몬스터까지 마스터하셨습니다!`);
-            resetGame();
+            restartFromScratch();
           }
         }, 800);
       } else {
@@ -160,6 +204,13 @@ function App() {
         setInput('');
       }
     }, 600);
+  };
+
+  const renderTimerText = () => {
+    if (timeLeft === null) return "⏱️ 제한시간: 무제한";
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    return `⏱️ 남은 시간: ${mins}분 ${secs < 10 ? '0' : ''}${secs}초`;
   };
 
   return (
@@ -190,6 +241,14 @@ function App() {
               <div style={styles.baseballFoulLineLeft}></div>
               <div style={styles.baseballFoulLineRight}></div>
 
+              <div style={{
+                ...styles.timerBanner,
+                backgroundColor: timeLeft !== null && timeLeft <= 60 ? '#d32f2f' : '#333333',
+                animation: timeLeft !== null && timeLeft <= 60 ? 'pulseGlow 1s infinite' : 'none'
+              }}>
+                {renderTimerText()}
+              </div>
+
               <div style={styles.badgeRow}>
                 <div style={styles.levelBadge}>⚡ {lvl}단계</div>
                 <div style={styles.digitBadge}>🔢 {digitLength}자리 중복없음</div>
@@ -199,8 +258,8 @@ function App() {
 
               <div style={styles.interactiveArea}>
                 <div 
-                  style={{...styles.monsterWrapper, cursor: isPitching ? 'not-allowed' : 'pointer'}} 
-                  className={monsterEffect || 'monster-breathing'} 
+                  style={{...styles.monsterWrapper, cursor: isPitching || isGameOver ? 'not-allowed' : 'pointer'}} 
+                  className={monsterEffect || (isGameOver ? 'monster-lose-giant' : 'monster-breathing')} 
                   onClick={handleMonsterTouch}
                 >
                   {!imgFailed ? (
@@ -216,14 +275,22 @@ function App() {
 
                 <div style={{
                   ...styles.sideSpeechBubble,
-                  borderColor: isTouched ? '#ff9800' : '#1e4620',
-                  backgroundColor: isTouched ? '#fffde7' : '#ffffff',
-                  color: isTouched ? '#d84315' : '#111111',
+                  borderColor: isGameOver ? '#d32f2f' : (isTouched ? '#ff9800' : '#1e4620'),
+                  backgroundColor: isGameOver ? '#ffebee' : (isTouched ? '#fffde7' : '#ffffff'),
+                  color: isGameOver ? '#c62828' : (isTouched ? '#d84315' : '#111111'),
                 }}>
-                  {isTouched ? touchLine : currentConfig.baseLine}
-                  <div style={{ ...styles.bubbleArrow, borderRightColor: isTouched ? '#ff9800' : '#1e4620' }}></div>
+                  {isGameOver ? "⚠️ 크오오오!! 시간 타임아웃!! 내가 이겼다 경기장은 내 차지다!! 💥" : (isTouched ? touchLine : currentConfig.baseLine)}
+                  <div style={{ ...styles.bubbleArrow, borderRightColor: isGameOver ? '#d32f2f' : (isTouched ? '#ff9800' : '#1e4620') }}></div>
                 </div>
               </div>
+
+              {isGameOver && (
+                <div style={styles.defeatOverlay}>
+                  <div style={styles.defeatTitle}>패배 💀</div>
+                  <div style={styles.defeatSub}>시간 내에 공략하지 못해 몬스터가 무지막지하게 거대해졌습니다!</div>
+                  <button onClick={restartFromScratch} style={styles.restartButton}>1단계(처음부터) 재도전하기 🔄</button>
+                </div>
+              )}
 
               {isPitching && <div style={styles.baseballNode}>⚾</div>}
 
@@ -246,18 +313,18 @@ function App() {
                       maxLength={digitLength}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder={`${digitLength}자리 정답 투구`}
+                      placeholder={isGameOver ? "시간 초과 패배" : `${digitLength}자리 정답 투구`}
                       style={styles.mainInput}
-                      disabled={isPitching}
+                      disabled={isPitching || isGameOver}
                     />
                     <div style={styles.inputSubText}>💡 각 숫자는 서로 중복될 수 없습니다!</div>
                   </div>
-                  <button type="submit" style={styles.pitchButton} disabled={isPitching}>
+                  <button type="submit" style={styles.pitchButton} disabled={isPitching || isGameOver}>
                     {isPitching ? '⏳' : '⚾ 던지기!'}
                   </button>
                 </form>
 
-                <button onClick={resetGame} style={styles.newGameButton}>🔄 현재 단계 다시하기</button>
+                <button onClick={resetGame} style={styles.newGameButton} disabled={isGameOver}>🔄 현재 단계 다시하기</button>
 
                 <div style={styles.logLabel}>📋 스코어보드 (기록 테이블)</div>
                 <div style={styles.logList}>
@@ -350,8 +417,6 @@ function App() {
       {/* 📱 인터랙티브 볼록 내비게이션 바 */}
       <div style={styles.navBarWrapper}>
         <div style={styles.navBarContainer}>
-          
-          {/* 1. 홈 구장 버튼 */}
           <div style={styles.navSlot}>
             <button 
               onClick={() => setActiveTab('home')}
@@ -373,7 +438,6 @@ function App() {
             </button>
           </div>
 
-          {/* 2. 순위 기록 버튼 */}
           <div style={styles.navSlot}>
             <button 
               onClick={() => setActiveTab('ranking')}
@@ -395,7 +459,6 @@ function App() {
             </button>
           </div>
 
-          {/* 3. 몬스터 도감 버튼 */}
           <div style={styles.navSlot}>
             <button 
               onClick={() => setActiveTab('settings')}
@@ -416,14 +479,12 @@ function App() {
               <span style={{...styles.navLabel, color: activeTab === 'settings' ? '#ffffff' : '#757575'}}>몬스터 도감</span>
             </button>
           </div>
-
         </div>
       </div>
     </div>
   );
 }
 
-// 🎨 스타일 시트
 const styles = {
   phoneScreen: { width: '100%', maxWidth: '480px', height: '100vh', margin: '0 auto', background: '#eef2eb', display: 'flex', flexDirection: 'column', position: 'relative', boxSizing: 'border-box', fontFamily: '"Malgun Gothic", sans-serif', overflow: 'hidden', boxShadow: '0 0 20px rgba(0,0,0,0.3)' },
   statusBar: { display: 'flex', justifyContent: 'space-between', padding: '12px 20px 6px 20px', color: '#fff', fontSize: '13px', background: '#253f18', zIndex: 10 },
@@ -431,6 +492,7 @@ const styles = {
   spectatorDecoration: { display: 'flex', height: '10px', background: '#1c3012', zIndex: 10 },
   decoBlock: { flex: 1, height: '100%', opacity: 0.8 },
   monsterGround: { background: '#457530', position: 'relative', padding: '15px 0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', borderBottom: '5px dashed #fff' },
+  timerBanner: { zIndex: 5, padding: '6px 16px', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', minWidth: '160px', textAlign: 'center' },
   baseballOutfieldPattern: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'repeating-linear-gradient(45deg, #457530, #457530 20px, #3d692a 20px, #3d692a 40px)', opacity: 0.6, zIndex: 1 },
   baseballInfieldDirt: { position: 'absolute', bottom: '-40px', width: '360px', height: '200px', background: '#c87d55', borderRadius: '50%', border: '4px solid #b0663e', zIndex: 2, opacity: 0.95, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.2)' },
   baseballFoulLineLeft: { position: 'absolute', bottom: 0, left: '15%', width: '3px', height: '180px', background: '#fff', transform: 'rotate(-25deg)', zIndex: 3, opacity: 0.7 },
@@ -441,13 +503,17 @@ const styles = {
   monsterNameTag: { background: '#1c3012', color: '#fff', fontSize: '12px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '6px', margin: '4px 0', zIndex: 5, border: '1px solid #457530' },
   interactiveArea: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', width: '94%', minHeight: '160px', marginTop: '5px', zIndex: 5 },
   monsterWrapper: { position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent', flexShrink: 0 },
-  monsterImg: { width: '115px', height: '115px', objectFit: 'contain', zIndex: 6, filter: 'drop-shadow(0px 10px 14px rgba(0,0,0,0.35))' },
-  fallbackCard: { width: '100px', height: '100px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 6, boxShadow: '0 8px 20px rgba(0,0,0,0.25)', border: '3px solid #ffffff', color: '#ffffff' },
+  monsterImg: { width: '115px', height: '115px', objectFit: 'contain', zIndex: 6, filter: 'drop-shadow(0px 10px 14px rgba(0,0,0,0.35))', transition: 'all 0.4s ease' },
+  fallbackCard: { width: '100px', height: '100px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 6, boxShadow: '0 8px 20px rgba(0,0,0,0.25)', border: '3px solid #ffffff', color: '#ffffff', transition: 'all 0.4s ease' },
   fallbackEmoji: { fontSize: '42px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' },
   fallbackLevelText: { fontSize: '12px', fontWeight: 'bold', marginTop: '2px', background: 'rgba(0,0,0,0.2)', padding: '1px 8px', borderRadius: '10px' },
   shadow: { width: '65px', height: '6px', background: 'rgba(0,0,0,0.3)', borderRadius: '50%', position: 'absolute', bottom: '-4px', left: '27px', zIndex: 4 },
   sideSpeechBubble: { position: 'relative', maxWidth: '200px', padding: '12px 14px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.45', boxShadow: '0 6px 16px rgba(0,0,0,0.2)', border: '3px solid #1e4620', transition: 'all 0.25s ease', wordBreak: 'keep-all' },
   bubbleArrow: { position: 'absolute', left: '-10px', top: '50%', transform: 'translateY(-50%)', borderWidth: '6px 10px 6px 0', borderStyle: 'solid', borderColor: 'transparent #1e4620 transparent transparent', width: 0, height: 0 },
+  defeatOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.82)', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', animation: 'fadeIn 0.4s ease-out' },
+  defeatTitle: { fontSize: '42px', color: '#ff2a00', fontWeight: 'bold', textShadow: '0 3px 6px rgba(0,0,0,0.6)', marginBottom: '12px' },
+  defeatSub: { fontSize: '15px', color: '#fff', marginBottom: '24px', wordBreak: 'keep-all', lineHeight: '1.4' },
+  restartButton: { background: '#2e7d32', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: '14px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 5px 12px rgba(0,0,0,0.4)' },
   baseballNode: { position: 'absolute', fontSize: '36px', zIndex: 9, left: '25%', bottom: '-20px', animation: 'ballThrow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards' },
   xpContainer: { width: '85%', marginTop: '15px', textAlign: 'right', zIndex: 5 },
   xpTrack: { width: '100%', height: '12px', background: 'rgba(0,0,0,0.4)', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' },
@@ -492,13 +558,12 @@ const styles = {
   navBarWrapper: { position: 'absolute', bottom: '0', left: '0', right: '0', height: '85px', background: 'transparent', zIndex: 100 },
   navBarContainer: { width: '100%', height: '100%', background: '#ffffff', borderTopLeftRadius: '30px', borderTopRightRadius: '30px', boxShadow: '0 -6px 25px rgba(0,0,0,0.08)', display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', padding: '0 10px 0 10px', boxSizing: 'border-box' },
   navSlot: { width: '80px', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', position: 'relative' },
-  dynamicBtn: { background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyDcontent: 'center', cursor: 'pointer', outline: 'none', width: '68px', height: '68px', borderRadius: '50%', transition: 'transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.2), background-color 0.2s', position: 'absolute', bottom: '12px' },
+  dynamicBtn: { background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none', width: '68px', height: '68px', borderRadius: '50%', transition: 'transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.2), background-color 0.2s', position: 'absolute', bottom: '12px' },
   iconCircle: { width: '32px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   navIcon: { width: '22px', height: '22px' },
   navLabel: { fontSize: '10px', fontWeight: 'bold', marginTop: '3px', whiteSpace: 'nowrap' }
 };
 
-// 🎬 애니메이션 세팅
 const animations = `
   .monster-breathing { animation: breathingEffect 2.5s ease-in-out infinite; }
   @keyframes breathingEffect { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.05, 0.95) translateY(-6px); } }
@@ -512,6 +577,9 @@ const animations = `
   @keyframes dodgeEffect { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(20px) skewX(-10deg); } 70% { transform: translateX(-10px) skewX(5deg); } }
   .hit-success { animation: successEffect 0.8s ease-out; }
   @keyframes successEffect { 0% { transform: scale(1); } 30% { transform: scale(1.25) rotate(12deg); filter: brightness(1.4); } 70% { transform: scale(0.85) rotate(-12deg); } 100% { transform: scale(1); } }
+  .monster-lose-giant { animation: giantEffect 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  @keyframes giantEffect { 0% { transform: scale(1); } 100% { transform: scale(2.4) translateY(-12px); filter: saturate(1.8) drop-shadow(0px 20px 35px rgba(0,0,0,0.6)); } }
+  @keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.85; } }
   @keyframes ballThrow { 0% { transform: translateY(200px) translateX(0) scale(0.4); opacity: 0; } 20% { opacity: 1; } 90% { transform: translateY(-40px) translateX(-40px) scale(1.1); opacity: 1; } 100% { transform: translateY(-50px) translateX(-50px) scale(0); opacity: 0; } }
   .log-fade-in { animation: fadeIn 0.3s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
